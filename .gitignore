@@ -1,0 +1,14 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Logs & temp
+*.log
+.DS_Store
+Thumbs.db
+
+# Private SSH Keys (never commit private keys)
+id_ed25519
+id_rsa
+*.pem

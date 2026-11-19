@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AI Supervisor - WhatsApp Style Chat with Real Meters & Proofs</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;500;600;700;800;900&family=Orbitron:wght@600;800;900&display=swap');
+    body {
+      font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      background-color: #0b141a;
+    }
+    .font-digital {
+      font-family: 'Orbitron', monospace;
+    }
+    .wa-bg {
+      background-color: #0b141a;
+      background-image: radial-gradient(#1f2c34 1px, transparent 1px), radial-gradient(#1f2c34 1px, #0b141a 1px);
+      background-size: 30px 30px;
+      background-position: 0 0, 15px 15px;
+    }
+    .chat-bubble-in {
+      background-color: #202c33;
+      color: #e9edef;
+      border-radius: 0px 16px 16px 16px;
+    }
+    .chat-bubble-out {
+      background-color: #005c4b;
+      color: #e9edef;
+      border-radius: 16px 0px 16px 16px;
+    }
+    .pulse-mic {
+      animation: pulse-mic 1.5s infinite;
+    }
+    @keyframes pulse-mic {
+      0% { box-shadow: 0 0 0 0 rgba(255, 196, 46, 0.8); }
+      70% { box-shadow: 0 0 0 14px rgba(255, 196, 46, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 196, 46, 0); }
+    }
+    .gauge-needle {
+      transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transform-origin: 100px 100px;
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="flex flex-col h-screen max-w-lg mx-auto shadow-2xl overflow-hidden border-x border-slate-800">
+
+  <!-- ================= TOP HEADER ================= -->
+  <header class="bg-[#202c33] text-white px-3 py-2.5 flex items-center justify-between z-30 shadow border-b border-[#2a3942]">
+    <div class="flex items-center gap-2.5">
+      <button onclick="restartDemo()" class="text-slate-300 hover:text-white p-1 text-lg">←</button>
+      <div class="relative">
+        <div class="w-10 h-10 rounded-full bg-[#FFC42E] text-slate-950 flex items-center justify-center font-black text-xl shadow">
+          🤖
+        </div>
+        <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-[#202c33] rounded-full"></span>
+      </div>
+      <div>
+        <div class="flex items-center gap-1.5">
+          <h1 class="font-bold text-sm text-[#e9edef] leading-tight">AI सीनियर सुपरवाइजर</h1>
+          <span class="bg-[#FFC42E] text-slate-950 text-[9px] font-extrabold px-1.5 py-0.2 rounded font-mono">BIJLI WALA</span>
+        </div>
+        <p id="headerStatus" class="text-[11px] text-[#00a884] font-medium flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> ऑनलाइन • वॉइस + विज़न + रियल मीटर
+        </p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button id="btnTtsToggle" onclick="toggleAudioSpeech()" class="p-2 rounded-full hover:bg-slate-700/50 text-[#aebac1] hover:text-[#FFC42E] text-sm" title="आवाज़ चालू/बंद">
+        🔊
+      </button>
+      <button onclick="restartDemo()" class="text-xs bg-[#111b21] hover:bg-slate-700 text-[#aebac1] border border-slate-700 px-2 py-1 rounded-lg font-bold" title="नया केस शुरू करें">
+        🔄 रीसेट
+      </button>
+    </div>
+  </header>
+
+  <!-- ================= CHAT SCROLL AREA ================= -->
+  <main id="chatMessages" class="flex-1 overflow-y-auto p-3.5 space-y-4 wa-bg text-xs">
+    <!-- Messages injected dynamically by JS -->
+  </main>
+
+  <!-- ================= BOTTOM ACTION BAR ================= -->
+  <footer class="bg-[#202c33] p-2 border-t border-[#2a3942] z-30">
+    <!-- Dynamic Quick Action Chips -->
+    <div id="quickChipsBar" class="flex items-center gap-1.5 overflow-x-auto pb-2 no-scrollbar text-xs">
+      <!-- Injected dynamically -->
+    </div>
+
+    <!-- WhatsApp Style Input -->
+    <div class="flex items-center gap-2">
+      <button onclick="triggerCameraInput('general')" class="p-2.5 rounded-full text-[#8696a0] hover:text-white bg-[#111b21] border border-slate-700 flex items-center justify-center text-lg active:scale-95 transition" title="कैमरा से फोटो खींचें">
+        📷
+      </button>
+
+      <div class="flex-1 relative flex items-center">
+        <input type="text" id="userTextInput" onkeydown="if(event.key==='Enter') handleUserSendMessage()" placeholder="मैसेज लिखें या बोलें (जैसे: 50 PSI, डायग्राम)..." class="w-full bg-[#2a3942] text-[#e9edef] placeholder-[#8696a0] text-xs py-2.5 px-3.5 rounded-2xl focus:outline-none focus:ring-1 focus:ring-[#00a884]">
+      </div>
+
+      <button id="btnMic" onclick="toggleSpeechRecognition()" class="w-10 h-10 rounded-full bg-[#FFC42E] hover:bg-amber-400 active:scale-95 text-slate-950 flex items-center justify-center font-bold text-lg shadow-lg transition" title="बोलकर बताएं">
+        🎤
+      </button>
+
+      <button onclick="handleUserSendMessage()" class="p-2.5 rounded-full text-[#00a884] hover:text-white bg-[#111b21] border border-slate-700 flex items-center justify-center text-base active:scale-95 transition" title="भेजें">
+        ➤
+      </button>
+    </div>
+  </footer>
+
+  <!-- ================= CAMERA MODAL ================= -->
+  <div id="cameraModal" class="fixed inset-0 bg-black/90 z-50 flex flex-col justify-between p-4 hidden">
+    <div class="flex items-center justify-between text-white">
+      <div class="flex items-center gap-2">
+        <span class="text-xl">📷</span>
+        <span id="camModalTitle" class="font-bold text-sm">कैमरा स्कैनर</span>
+      </div>
+      <button onclick="closeCameraModal()" class="text-slate-400 hover:text-white text-2xl font-bold">✕</button>
+    </div>
+
+    <div class="relative flex-1 my-3 bg-slate-950 rounded-2xl overflow-hidden flex items-center justify-center border-2 border-dashed border-[#FFC42E]">
+      <video id="cameraVideo" autoplay playsinline class="w-full h-full object-cover"></video>
+      <div class="absolute inset-8 border-2 border-[#FFC42E] rounded-xl pointer-events-none flex flex-col justify-between p-3">
+        <span id="camOverlayTag" class="text-[10px] bg-black/80 text-[#FFC42E] px-2 py-0.5 rounded font-mono font-bold self-start">
+          [AI SCANNER: OBJECT TARGET]
+        </span>
+        <span id="camOverlayHint" class="text-[11px] text-white text-center bg-black/80 py-1 rounded font-bold">
+          ऑब्जेक्ट को बॉक्स के बीच में रखें
+        </span>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-around pb-2">
+      <button onclick="switchCameraAngle()" class="px-4 py-2 bg-slate-800 text-white rounded-xl text-xs font-bold border border-slate-700">
+        🔄 एंगल बदलें
+      </button>
+      <button onclick="captureCameraPhoto()" class="w-16 h-16 rounded-full bg-[#FFC42E] border-4 border-white text-slate-950 flex items-center justify-center text-2xl shadow-xl active:scale-95 transition">
+        📸
+      </button>
+      <button id="btnDemoSnap" onclick="handleDemoSnapshot()" class="px-3 py-2 bg-slate-800 text-amber-300 rounded-xl text-xs font-bold border border-slate-700">
+        ⚡ डेमो फोटो
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= SCRIPT & INTERACTION ENGINE ================= -->
+  <script>
+    let speechEnabled = true;
+    let cameraStream = null;
+    let cameraFacing = 'environment';
+    let currentStep = 1;
+    let currentCameraContext = 'general'; // 'safety_proof', 'diagram_sheet', 'general'
+
+    // Appliance & Diagnostics State
+    let applianceData = {
+      brand: "LG",
+      ton: "1.5 Ton",
+      type: "Inverter",
+      format: "Split AC",
+      gas: "R32",
+      voltage: 220,
+      amp: 3.8,
+      psi: 40,
+      safetyProofs: {
+        mcb: false,
+        capacitor: false,
+        gloves: false
+      },
+      problem: ""
+    };
+
+    const chatContainer = document.getElementById('chatMessages');
+
+    // Speech Synthesis
+    function speak(text) {
+      if (!speechEnabled || !('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'hi-IN';
+      u.rate = 0.95;
+      const voices = window.speechSynthesis.getVoices();
+      const hi = voices.find(v => v.lang.includes('hi') || v.lang.includes('IN'));
+      if (hi) u.voice = hi;
+      window.speechSynthesis.speak(u);
+    }
+
+    function toggleAudioSpeech() {
+      speechEnabled = !speechEnabled;
+      document.getElementById('btnTtsToggle').innerText = speechEnabled ? "🔊" : "🔇";
+      if (!speechEnabled) window.speechSynthesis.cancel();
+    }
+
+    // Speech Recognition
+    function toggleSpeechRecognition() {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) {
+        alert("माइक के लिए Google Chrome का उपयोग करें।");
+        return;
+      }
+      const rec = new SR();
+      rec.lang = 'hi-IN';
+      const micBtn = document.getElementById('btnMic');
+      micBtn.classList.add('pulse-mic');
+      speak("मैं सुन रहा हूँ, बोलिए...");
+
+      rec.onresult = (e) => {
+        micBtn.classList.remove('pulse-mic');
+        const transcript = e.results[0][0].transcript;
+        document.getElementById('userTextInput').value = transcript;
+        handleUserSendMessage();
+      };
+      rec.onerror = () => micBtn.classList.remove('pulse-mic');
+      rec.onend = () => micBtn.classList.remove('pulse-mic');
+      rec.start();
+    }
+
+    function scrollToBottom() {
+      setTimeout(() => {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }, 50);
+    }
+
+    function addAiMessage(htmlContent, voiceText = "") {
+      const div = document.createElement('div');
+      div.className = "flex gap-2 items-start max-w-[95%]";
+      const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      
+      div.innerHTML = `
+        <div class="w-8 h-8 rounded-full bg-[#FFC42E] text-slate-950 flex items-center justify-center font-bold text-sm flex-shrink-0 mt-0.5 shadow">
+          🤖
+        </div>
+        <div class="chat-bubble-in p-3 shadow-md space-y-2.5 border border-[#2a3942] w-full">
+          ${htmlContent}
+          <div class="flex items-center justify-between text-[10px] text-[#8696a0] pt-1.5 border-t border-[#2a3942]/60">
+            <span class="flex items-center gap-1 font-mono text-[#00a884] font-bold">AI Senior Supervisor ⚡</span>
+            <div class="flex items-center gap-1.5">
+              <span>${timeStr}</span>
+              <button onclick="speak(\`${voiceText || ''}\`)" class="text-xs hover:text-white" title="सुने">🔊</button>
+            </div>
+          </div>
+        </div>
+      `;
+      chatContainer.appendChild(div);
+      scrollToBottom();
+      if (voiceText) speak(voiceText);
+    }
+
+    function addUserMessage(text) {
+      const div = document.createElement('div');
+      div.className = "flex justify-end";
+      const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+      div.innerHTML = `
+        <div class="chat-bubble-out p-3 shadow-md max-w-[85%] space-y-1">
+          <p class="text-xs text-white leading-relaxed font-medium">${text}</p>
+          <div class="flex items-center justify-end gap-1 text-[10px] text-green-200">
+            <span>${timeStr}</span>
+            <span>✓✓</span>
+          </div>
+        </div>
+      `;
+      chatContainer.appendChild(div);
+      scrollToBottom();
+    }
+
+    function setQuickChips(chips) {
+      const bar = document.getElementById('quickChipsBar');
+      bar.innerHTML = "";
+      chips.forEach(chip => {
+        const btn = document.createElement('button');
+        btn.className = "bg-[#2a3942] hover:bg-[#32434e] active:scale-95 text-[#e9edef] px-3 py-1.5 rounded-full whitespace-nowrap border border-[#3b4c56] font-medium flex items-center gap-1 shadow-sm transition";
+        btn.innerHTML = chip.label;
+        btn.onclick = chip.action;
+        bar.appendChild(btn);
+      });
+    }
+
+    // ================= STEP 1: ARRIVAL & AC NAMEPLATE PHOTO =================
+    function initConversation() {
+      chatContainer.innerHTML = "";
+      currentStep = 1;
+
+      addAiMessage(`
+        <p class="font-extrabold text-sm text-[#FFC42E]">नमस्ते टेक्नीशियन भाई! 🙏</p>
+        <p class="leading-relaxed">
+          आप ग्राहक (रमेश कुमार, अयोध्या) के यहाँ पहुँच गए हैं। सबसे पहले <strong>AC के इंडोर/आउटडोर और नेमप्लेट की फोटो खींचें</strong>, साथ ही स्टेबलाइजर और सॉकेट भी चेक करें।
+        </p>
+
+        <div class="bg-[#111b21] p-3 rounded-xl border border-slate-700 space-y-2 mt-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-white text-xs flex items-center gap-1.5">
+              <span>📸</span> एसी नेमप्लेट फोटो (AC Nameplate)
+            </span>
+            <span class="text-[10px] text-amber-400 bg-amber-950/70 border border-amber-600/50 px-2 py-0.5 rounded">अनिवार्य</span>
+          </div>
+          <p class="text-[11px] text-slate-400">नेमप्लेट की फोटो से ब्रांड, टन, मॉडल और गैस AI अपने-आप भर देगा।</p>
+          <div class="flex gap-2 pt-1">
+            <button onclick="triggerCameraInput('nameplate')" class="flex-1 py-2 bg-[#FFC42E] hover:bg-amber-400 text-slate-950 rounded-lg font-black text-xs flex items-center justify-center gap-1 shadow active:scale-95">
+              📷 कैमरा खोलें
+            </button>
+            <button onclick="handlePhotoReceived('LG Dual Inverter 1.5T Nameplate')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-bold text-xs border border-slate-600 active:scale-95">
+              ⚡ सैंपल फोटो
+            </button>
+          </div>
+        </div>
+      `, "नमस्ते टेक्नीशियन भाई! आप ग्राहक के यहाँ पहुँच गए हैं। सबसे पहले AC की नेमप्लेट और स्टेबलाइजर की फोटो खींचें।");
+
+      setQuickChips([
+        { label: "📸 AC की फोटो खींची", action: () => handlePhotoReceived('LG Dual Inverter 1.5T Nameplate') },
+        { label: "🔌 स्टेबलाइजर चेक किया (220V OK)", action: () => sendQuickText("स्टेबलाइजर की फोटो ले ली है, 220V सप्लाई चालू है।") },
+        { label: "📱 रिमोट चालू है", action: () => sendQuickText("रिमोट का डिस्प्ले चालू है, बैटरी सही है।") }
+      ]);
+    }
+
+    // ================= STEP 2: PHOTO DETECTED + EDITABLE FORM =================
+    function handlePhotoReceived(photoLabel) {
+      addUserMessage(`📸 [फोटो अपलोड: ${photoLabel}]`);
+
+      setTimeout(() => {
+        currentStep = 2;
+        addAiMessage(`
+          <div class="space-y-2.5">
+            <div class="flex items-center justify-between text-[#FFC42E] font-bold">
+              <span class="flex items-center gap-1">✨ AI विज़न ऑटो-डिटेक्ट:</span>
+              <span class="text-green-400 text-[10px] bg-green-950 px-2 py-0.5 rounded border border-green-700 font-mono">CONFIDENCE 96%</span>
+            </div>
+            <p class="text-slate-300 text-[11px]">
+              फोटो से ये डेटा पढ़ा गया है। अगर कोई वैल्यू गलत हो तो ड्रॉपडाउन से अभी बदल लें:
+            </p>
+
+            <div class="bg-[#111b21] p-3 rounded-xl border border-slate-700 space-y-2.5 text-xs">
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-0.5">ब्रांड (Brand):</label>
+                  <select id="selBrand" onchange="applianceData.brand=this.value" class="w-full bg-[#202c33] text-white p-1.5 rounded-lg border border-slate-600 font-bold focus:outline-none">
+                    <option value="LG" selected>LG</option>
+                    <option value="Daikin">Daikin</option>
+                    <option value="Voltas">Voltas</option>
+                    <option value="Hitachi">Hitachi</option>
+                    <option value="Samsung">Samsung</option>
+                    <option value="Lloyd">Lloyd</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-0.5">क्षमता (Capacity):</label>
+                  <select id="selTon" onchange="applianceData.ton=this.value" class="w-full bg-[#202c33] text-white p-1.5 rounded-lg border border-slate-600 font-bold focus:outline-none">
+                    <option value="1.0 Ton">1.0 Ton (12000 BTU)</option>
+                    <option value="1.5 Ton" selected>1.5 Ton (18000 BTU)</option>
+                    <option value="2.0 Ton">2.0 Ton (24000 BTU)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-0.5">तकनीक (Type):</label>
+                  <select id="selType" onchange="applianceData.type=this.value" class="w-full bg-[#202c33] text-white p-1.5 rounded-lg border border-slate-600 font-bold focus:outline-none">
+                    <option value="Inverter" selected>Inverter (Dual)</option>
+                    <option value="Non-Inverter">Non-Inverter</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-0.5">गैस (Refrigerant):</label>
+                  <select id="selGas" onchange="applianceData.gas=this.value" class="w-full bg-[#202c33] text-white p-1.5 rounded-lg border border-slate-600 font-bold focus:outline-none">
+                    <option value="R32" selected>R32 (Eco-Friendly)</option>
+                    <option value="R410A">R410A</option>
+                    <option value="R22">R22</option>
+                  </select>
+                </div>
+              </div>
+
+              <button onclick="confirmApplianceDetails()" class="w-full mt-2 py-2 bg-[#00a884] hover:bg-emerald-600 text-white rounded-lg font-black text-xs flex items-center justify-center gap-1 shadow active:scale-95">
+                ✓ जानकारी सही है, सुरक्षा फाटक पर चलें
+              </button>
+            </div>
+          </div>
+        `, "नेमप्लेट से पहचान लिया है: LG 1.5 टन इनवर्टर, R32 गैस। अगर कुछ गलत हो तो ड्रॉपडाउन से बदलें और पुष्टि करें।");
+
+        setQuickChips([
+          { label: "✓ पुष्टि करें (Confirm)", action: () => confirmApplianceDetails() },
+          { label: "🔄 दोबारा फोटो लें", action: () => triggerCameraInput('nameplate') }
+        ]);
+      }, 600);
+    }
+
+    // ================= STEP 3: SAFETY GATE WITH REAL PHOTO PROOF =================
+    function confirmApplianceDetails() {
+      addUserMessage(`✓ मैंने कन्फर्म कर लिया: ${applianceData.brand} ${applianceData.ton} ${applianceData.type}, गैस ${applianceData.gas}`);
+
+      setTimeout(() => {
+        currentStep = 3;
+        addAiMessage(`
+          <div class="space-y-2.5">
+            <div class="flex items-center justify-between">
+              <p class="font-extrabold text-[#FFC42E] flex items-center gap-1 text-sm">
+                <span>🛡️</span> सुरक्षा फाटक (Safety Mandatory Check)
+              </p>
+              <span class="text-[10px] bg-red-950 text-red-300 border border-red-700 px-2 py-0.5 rounded font-bold">
+                🔒 फोटो प्रूफ अनिवार्य
+              </span>
+            </div>
+
+            <p class="text-slate-300 text-[11px] leading-relaxed">
+              कंपनी नियम: AC का पैनल खोलने या तार छूने से पहले इन 3 सुरक्षा नियमों का <strong>फोटो सबूत (Photo Proof)</strong> देना जरूरी है:
+            </p>
+
+            <div class="bg-[#111b21] p-3 rounded-xl border border-red-500/50 space-y-3 text-xs">
+              <!-- Safety 1 -->
+              <div class="flex items-center justify-between p-2 bg-[#182229] rounded-lg border border-slate-700">
+                <div class="flex items-center gap-2">
+                  <input type="checkbox" id="chkMcb" onchange="checkSafetyState()" class="w-4 h-4 accent-red-600">
+                  <div>
+                    <span class="text-white font-bold block">1. मुख्य MCB बंद की? ⚡</span>
+                    <span class="text-[10px] text-slate-400">टेस्टर से 0V चेक करें</span>
+                  </div>
+                </div>
+                <span id="proofBadgeMcb" class="text-[10px] text-slate-500 bg-slate-800 px-2 py-0.5 rounded">प्रूफ नहीं मिला</span>
+              </div>
+
+              <!-- Safety 2 -->
+              <div class="flex items-center justify-between p-2 bg-[#182229] rounded-lg border border-slate-700">
+                <div class="flex items-center gap-2">
+                  <input type="checkbox" id="chkCap" onchange="checkSafetyState()" class="w-4 h-4 accent-red-600">
+                  <div>
+                    <span class="text-white font-bold block">2. कैपेसिटर डिस्चार्ज किया? 🧯</span>
+                    <span class="text-[10px] text-slate-400">पेचकस से पिन शॉर्ट की</span>
+                  </div>
+                </div>
+                <span id="proofBadgeCap" class="text-[10px] text-slate-500 bg-slate-800 px-2 py-0.5 rounded">प्रूफ नहीं मिला</span>
+              </div>
+
+              <!-- Safety 3 -->
+              <div class="flex items-center justify-between p-2 bg-[#182229] rounded-lg border border-slate-700">
+                <div class="flex items-center gap-2">
+                  <input type="checkbox" id="chkGloves" onchange="checkSafetyState()" class="w-4 h-4 accent-red-600">
+                  <div>
+                    <span class="text-white font-bold block">3. रबर के दस्ताने पहने? 🧤</span>
+                    <span class="text-[10px] text-slate-400">आग/स्पार्क से बचाव</span>
+                  </div>
+                </div>
+                <span id="proofBadgeGloves" class="text-[10px] text-slate-500 bg-slate-800 px-2 py-0.5 rounded">प्रूफ नहीं मिला</span>
+              </div>
+
+              <!-- Proof Photo Upload Box -->
+              <div class="p-2.5 bg-red-950/40 rounded-lg border border-red-500/40 flex items-center justify-between">
+                <div>
+                  <span class="text-red-200 font-bold block text-[11px]">सुरक्षा सबूत की फोटो (MCB / दस्ताने):</span>
+                  <span class="text-[10px] text-slate-400">फोटो खींचते ही AI विज़न से पास होगा</span>
+                </div>
+                <button onclick="triggerCameraInput('safety_proof')" class="px-3 py-1.5 bg-[#FFC42E] hover:bg-amber-400 text-slate-950 rounded-lg font-black text-xs shadow active:scale-95">
+                  📸 प्रूफ फोटो लें
+                </button>
+              </div>
+
+              <button id="btnSafetySubmit" onclick="submitSafetyPassed()" disabled class="w-full mt-2 py-2 bg-slate-700 text-slate-400 rounded-lg font-bold text-xs cursor-not-allowed">
+                🔒 सुरक्षा जांच व फोटो प्रूफ के बाद ही खुलेगा
+              </button>
+            </div>
+          </div>
+        `, "तार छूने से पहले मुख्य MCB बंद करें, कैपेसिटर डिस्चार्ज करें और दस्तानों की फोटो प्रूफ अपलोड करें।");
+
+        setQuickChips([
+          { label: "📸 सुरक्षा प्रूफ फोटो अपलोड करें", action: () => triggerCameraInput('safety_proof') },
+          { label: "⚡ ऑटो वेरीफाई सुरक्षा प्रूफ", action: () => autoPassSafetyWithProof() }
+        ]);
+      }, 500);
+    }
+
+    function checkSafetyState() {
+      const m1 = document.getElementById('chkMcb')?.checked;
+      const m2 = document.getElementById('chkCap')?.checked;
+      const m3 = document.getElementById('chkGloves')?.checked;
+      const btn = document.getElementById('btnSafetySubmit');
+      
+      if (m1 && m2 && m3 && applianceData.safetyProofs.mcb) {
+        btn.disabled = false;
+        btn.className = "w-full mt-2 py-2 bg-[#00a884] hover:bg-emerald-600 text-white rounded-lg font-black text-xs shadow active:scale-95";
+        btn.innerText = "✓ सुरक्षा प्रूफ सत्यापित - रीडिंग मीटर पर चलें";
+      }
+    }
+
+    function autoPassSafetyWithProof() {
+      applianceData.safetyProofs = { mcb: true, capacitor: true, gloves: true };
+      if (document.getElementById('chkMcb')) document.getElementById('chkMcb').checked = true;
+      if (document.getElementById('chkCap')) document.getElementById('chkCap').checked = true;
+      if (document.getElementById('chkGloves')) document.getElementById('chkGloves').checked = true;
+
+      const b1 = document.getElementById('proofBadgeMcb');
+      const b2 = document.getElementById('proofBadgeCap');
+      const b3 = document.getElementById('proofBadgeGloves');
+      if (b1) { b1.innerText = "✓ MCB 0V Verified"; b1.className = "text-[10px] text-green-300 bg-green-950 px-2 py-0.5 rounded border border-green-700 font-bold"; }
+      if (b2) { b2.innerText = "✓ Discharged"; b2.className = "text-[10px] text-green-300 bg-green-950 px-2 py-0.5 rounded border border-green-700 font-bold"; }
+      if (b3) { b3.innerText = "✓ Gloves On"; b3.className = "text-[10px] text-green-300 bg-green-950 px-2 py-0.5 rounded border border-green-700 font-bold"; }
+
+      checkSafetyState();
+      addUserMessage("📸 [सुरक्षा प्रूफ फोटो अपलोड की: MCB OFF (0V) व इंसुलेटेड ग्लव्स]");
+      submitSafetyPassed();
+    }
+
+    function submitSafetyPassed() {
+      speak("शाबाश टेक्नीशियन भाई! सुरक्षा के तीनों नियम और फोटो प्रूफ सत्यापित हो चुके हैं। अब मीटर रीडिंग लेते हैं।");
+      askForReadings();
+    }
+
+    // ================= STEP 4: REAL PHYSICAL METERS DASHBOARD =================
+    function askForReadings() {
+      setTimeout(() => {
+        currentStep = 4;
+        addAiMessage(`
+          <div class="space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-1.5">
+              <p class="font-extrabold text-[#FFC42E] text-sm">
+                📏 रियल मीटर डैशबोर्ड (Real Physical Gauges)
+              </p>
+              <span class="text-[10px] text-green-400 font-bold bg-green-950 px-2 py-0.5 rounded">लाइव सिंक ⚡</span>
+            </div>
+            
+            <p class="text-slate-300 text-[11px]">
+              नीचे असली मीटर की सुई और डिजिटल डिस्प्ले को देखकर वैल्यू डालें। नंबर बदलते ही मीटर की सुई रियल-टाइम घूमेगी और AI आवाज़ में बोलेगा:
+            </p>
+
+            <!-- REAL METER 1: MANIFOLD GAUGE WITH ROTATING NEEDLE -->
+            <div class="bg-gradient-to-b from-[#182229] to-[#0f171d] p-3 rounded-2xl border-2 border-slate-700 shadow-xl space-y-2">
+              <div class="flex justify-between items-center text-xs">
+                <span class="font-extrabold text-[#00a884] flex items-center gap-1.5">
+                  <span class="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse"></span>
+                  1. सक्शन प्रेशर गेज (Suction PSI Gauge - Blue Port)
+                </span>
+                <span id="psiFeedbackText" class="text-red-400 font-black text-[11px] bg-red-950/80 px-2 py-0.5 rounded border border-red-700">
+                  40 PSI (गैस बहुत कम!)
+                </span>
+              </div>
+
+              <!-- SVG Real Physical Gauge -->
+              <div class="flex items-center gap-3 bg-[#111b21] p-2.5 rounded-xl border border-slate-700">
+                <div class="relative w-28 h-28 flex-shrink-0 mx-auto">
+                  <svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-md">
+                    <!-- Gauge Body -->
+                    <circle cx="100" cy="100" r="92" fill="#1e293b" stroke="#0284c7" stroke-width="5"/>
+                    <circle cx="100" cy="100" r="82" fill="#0f172a" stroke="#334155" stroke-width="2"/>
+                    <circle cx="100" cy="100" r="76" fill="#f8fafc"/>
+
+                    <!-- Color Zones: Red Low (0-60), Yellow (60-110), Green OK (115-135), Red High (140+) -->
+                    <path d="M 40 135 A 68 68 0 0 1 50 65" fill="none" stroke="#ef4444" stroke-width="7"/>
+                    <path d="M 50 65 A 68 68 0 0 1 100 32" fill="none" stroke="#f59e0b" stroke-width="7"/>
+                    <path d="M 100 32 A 68 68 0 0 1 135 48" fill="none" stroke="#10b981" stroke-width="11"/>
+                    <path d="M 135 48 A 68 68 0 0 1 160 135" fill="none" stroke="#dc2626" stroke-width="7"/>
+
+                    <!-- Dial Markings -->
+                    <text x="100" y="70" text-anchor="middle" font-size="9" font-weight="900" fill="#475569">R32 GAUGE</text>
+                    <text x="100" y="85" text-anchor="middle" font-size="8" font-weight="bold" fill="#10b981">125 PSI OK</text>
+                    <text x="45" y="142" font-size="9" font-weight="bold" fill="#64748b">0</text>
+                    <text x="100" y="24" text-anchor="middle" font-size="9" font-weight="bold" fill="#10b981">125</text>
+                    <text x="145" y="142" font-size="9" font-weight="bold" fill="#64748b">250</text>
+
+                    <!-- Rotating Needle -->
+                    <line id="liveGaugeNeedle" x1="100" y1="100" x2="100" y2="35" stroke="#dc2626" stroke-width="3.5" stroke-linecap="round" class="gauge-needle" style="transform: rotate(-81.6deg);"/>
+                    <circle cx="100" cy="100" r="7" fill="#0f172a" stroke="#ffffff" stroke-width="1.5"/>
+                  </svg>
+                </div>
+
+                <!-- Input Controls -->
+                <div class="flex-1 space-y-1.5">
+                  <label class="block text-[10px] text-slate-400">PSI नंबर डालें या सुई घुमाएँ:</label>
+                  <div class="flex items-center gap-1.5">
+                    <input type="number" id="inLivePsi" value="40" oninput="onLiveMeterInput('psi', this.value)" class="w-full bg-[#202c33] text-white p-2 text-center font-black text-xl rounded-xl border border-blue-500/50 focus:outline-none font-digital">
+                    <span class="text-xs font-black text-slate-300">PSI</span>
+                  </div>
+                  <input type="range" min="0" max="250" value="40" oninput="document.getElementById('inLivePsi').value=this.value; onLiveMeterInput('psi', this.value)" class="w-full accent-blue-500 cursor-pointer">
+                </div>
+              </div>
+            </div>
+
+            <!-- REAL METER 2: INDUSTRIAL CLAMP MULTIMETER (CURRENT) -->
+            <div class="bg-gradient-to-b from-[#182229] to-[#0f171d] p-3 rounded-2xl border-2 border-slate-700 shadow-xl space-y-2">
+              <div class="flex justify-between items-center text-xs">
+                <span class="font-extrabold text-amber-400 flex items-center gap-1.5">
+                  <span>🧲</span> 2. क्लैम्प मीटर करंट (Clamp Multimeter)
+                </span>
+                <span id="ampFeedbackText" class="text-amber-400 font-black text-[11px] bg-amber-950/80 px-2 py-0.5 rounded border border-amber-700">
+                  3.8A (लोड 58% कम)
+                </span>
+              </div>
+
+              <div class="flex items-center gap-3 bg-[#111b21] p-2.5 rounded-xl border border-slate-700">
+                <!-- Clamp Graphic with LCD Display -->
+                <div class="w-24 h-16 bg-[#FFC42E] rounded-xl p-1.5 border-2 border-slate-900 flex flex-col justify-between shadow-inner">
+                  <div class="flex justify-between items-center text-[8px] font-black text-slate-950">
+                    <span>CLAMP 400A</span>
+                    <span>~AC A</span>
+                  </div>
+                  <div class="bg-[#1b3d2f] p-1 rounded border border-slate-900 text-center">
+                    <span id="clampLcdText" class="font-digital text-emerald-400 font-black text-sm tracking-widest">3.8 A</span>
+                  </div>
+                  <span class="text-[7px] text-slate-900 text-center font-bold">TRUE RMS CAT III</span>
+                </div>
+
+                <div class="flex-1 space-y-1">
+                  <label class="block text-[10px] text-slate-400">एम्पीयर (Current) बदलें:</label>
+                  <div class="flex items-center gap-1.5">
+                    <input type="number" step="0.1" id="inLiveAmp" value="3.8" oninput="onLiveMeterInput('amp', this.value)" class="w-full bg-[#202c33] text-white p-2 text-center font-black text-base rounded-xl border border-amber-500/50 focus:outline-none font-digital">
+                    <span class="text-xs font-black text-slate-300">Amp</span>
+                  </div>
+                  <span class="text-[9px] text-slate-400 block">💡 क्लिप सिर्फ एक Phase तार पर फंसाएं</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- REAL METER 3: DIGITAL MULTIMETER (VOLTAGE) -->
+            <div class="bg-gradient-to-b from-[#182229] to-[#0f171d] p-3 rounded-2xl border-2 border-slate-700 shadow-xl space-y-2">
+              <div class="flex justify-between items-center text-xs">
+                <span class="font-extrabold text-blue-400 flex items-center gap-1.5">
+                  <span>⚡</span> 3. लाइन वोल्टेज (Digital Multimeter Probes)
+                </span>
+                <span id="voltFeedbackText" class="text-green-400 font-black text-[11px] bg-green-950/80 px-2 py-0.5 rounded border border-green-700">
+                  220V (सुरक्षित)
+                </span>
+              </div>
+
+              <div class="flex items-center gap-3 bg-[#111b21] p-2.5 rounded-xl border border-slate-700">
+                <div class="w-24 h-14 bg-slate-800 rounded-xl p-1.5 border-2 border-slate-600 flex flex-col justify-between">
+                  <div class="flex justify-between items-center text-[8px] font-bold text-slate-300">
+                    <span>V ~ AC</span>
+                    <span>AUTO</span>
+                  </div>
+                  <div class="bg-[#0f2838] p-1 rounded text-center border border-slate-700">
+                    <span id="voltLcdText" class="font-digital text-cyan-400 font-black text-sm tracking-wider">220 V</span>
+                  </div>
+                </div>
+
+                <div class="flex-1 space-y-1">
+                  <label class="block text-[10px] text-slate-400">वोल्टेज बदलें:</label>
+                  <div class="flex items-center gap-1.5">
+                    <input type="number" id="inLiveVolt" value="220" oninput="onLiveMeterInput('volt', this.value)" class="w-full bg-[#202c33] text-white p-2 text-center font-black text-base rounded-xl border border-cyan-500/50 focus:outline-none font-digital">
+                    <span class="text-xs font-black text-slate-300">Volt</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button onclick="submitReadingsFromMeters()" class="w-full py-2.5 bg-[#FFC42E] hover:bg-amber-400 text-slate-950 rounded-xl font-black text-xs shadow-lg active:scale-95 transition">
+              ⚡ रीडिंग सबमिट करें और अगला कदम पूछें
+            </button>
+          </div>
+        `, "अब रियल मीटर डैशबोर्ड से रीडिंग चेक करें। सुई का नंबर बदलते ही AI तुरंत आवाज में बोलकर बताएगा।");
+
+        setQuickChips([
+          { label: "⚡ 50 PSI टेस्ट (कम गैस)", action: () => setMeterQuick(50) },
+          { label: "⚡ 125 PSI टेस्ट (नॉर्मल)", action: () => setMeterQuick(125) },
+          { label: "⚡ 500 PSI टेस्ट (गलत)", action: () => setMeterQuick(500) }
+        ]);
+      }, 500);
+    }
+
+    // Dynamic Meter Reactions with Real-time Speech
+    let meterDebounce;
+    function onLiveMeterInput(type, val) {
+      clearTimeout(meterDebounce);
+      val = parseFloat(val) || 0;
+
+      if (type === 'psi') {
+        applianceData.psi = val;
+        // Map 0 to 250 PSI to -120 to +120 degrees
+        const deg = -120 + (val / 250) * 240;
+        const needle = document.getElementById('liveGaugeNeedle');
+        if (needle) needle.style.transform = `rotate(${deg}deg)`;
+
+        const fb = document.getElementById('psiFeedbackText');
+        if (fb) {
+          if (val > 300) {
+            fb.className = "text-red-500 font-black text-[11px] bg-red-950 px-2 py-0.5 rounded border border-red-700";
+            fb.innerText = `${val} PSI (अत्यधिक उच्च / खतरा!)`;
+          } else if (val < 70) {
+            fb.className = "text-red-400 font-black text-[11px] bg-red-950 px-2 py-0.5 rounded border border-red-700";
+            fb.innerText = `${val} PSI (गैस बहुत कम!)`;
+          } else if (val >= 115 && val <= 135) {
+            fb.className = "text-green-400 font-black text-[11px] bg-green-950 px-2 py-0.5 rounded border border-green-700";
+            fb.innerText = `${val} PSI (परफेक्ट प्रेशर)`;
+          } else {
+            fb.className = "text-amber-400 font-black text-[11px] bg-amber-950 px-2 py-0.5 rounded border border-amber-700";
+            fb.innerText = `${val} PSI (हल्का कम है)`;
+          }
+        }
+
+        meterDebounce = setTimeout(() => {
+          if (val > 300) {
+            speak(`आपने डाला ${val} PSI! ये रीडिंग बहुत ज्यादा या गलत है, कृपया मीटर वाल्व दोबारा चेक करें।`);
+          } else if (val < 70) {
+            speak(`आपने डाला ${val} PSI। R32 गैस के लिए ये बहुत कम है, लीकेज पक्की है।`);
+          } else if (val >= 115 && val <= 135) {
+            speak(`आपने डाला ${val} PSI। गैस का प्रेशर बिल्कुल सही है।`);
+          } else {
+            speak(`आपने डाला ${val} PSI। गैस थोड़ी कम है।`);
+          }
+        }, 350);
+
+      } else if (type === 'amp') {
+        applianceData.amp = val;
+        const lcd = document.getElementById('clampLcdText');
+        if (lcd) lcd.innerText = `${val.toFixed(1)} A`;
+        const fb = document.getElementById('ampFeedbackText');
+        if (fb) {
+          if (val < 4.5) {
+            fb.className = "text-amber-400 font-black text-[11px] bg-amber-950 px-2 py-0.5 rounded border border-amber-700";
+            fb.innerText = `${val}A (लोड कम है)`;
+          } else {
+            fb.className = "text-green-400 font-black text-[11px] bg-green-950 px-2 py-0.5 rounded border border-green-700";
+            fb.innerText = `${val}A (नॉर्मल लोड)`;
+          }
+        }
+        meterDebounce = setTimeout(() => {
+          speak(`करंट ${val} एम्पीयर दर्ज किया गया।`);
+        }, 400);
+
+      } else if (type === 'volt') {
+        applianceData.voltage = val;
+        const lcd = document.getElementById('voltLcdText');
+        if (lcd) lcd.innerText = `${val} V`;
+        meterDebounce = setTimeout(() => {
+          speak(`वोल्टेज ${val} वोल्ट दर्ज किया गया।`);
+        }, 400);
+      }
+    }
+
+    function setMeterQuick(psiVal) {
+      const inEl = document.getElementById('inLivePsi');
+      if (inEl) {
+        inEl.value = psiVal;
+        onLiveMeterInput('psi', psiVal);
+      }
+    }
+
+    // ================= STEP 5: PROBLEM SELECTION & ERROR SHEET UPLOAD =================
+    function submitReadingsFromMeters() {
+      addUserMessage(`रीडिंग्स दर्ज कीं: सक्शन ${applianceData.psi} PSI, करंट ${applianceData.amp}A, वोल्टेज ${applianceData.voltage}V`);
+
+      setTimeout(() => {
+        currentStep = 5;
+        addAiMessage(`
+          <div class="space-y-2.5">
+            <div class="p-2.5 bg-slate-900 rounded-xl border border-red-500/50">
+              <span class="text-[10px] text-red-400 font-bold uppercase block">AI प्राथमिक निष्कर्ष:</span>
+              <p class="text-white font-black text-xs">
+                सक्शन प्रेशर ${applianceData.psi} PSI (काफी कम) और कंप्रेसर लोड 58% है।
+              </p>
+            </div>
+
+            <p class="font-bold text-[#FFC42E]">
+              अब बताइए ग्राहक के AC में मुख्य समस्या क्या आ रही है?
+            </p>
+
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <button onclick="selectProblem('ठंडा नहीं कर रहा (कूलिंग बंद)')" class="p-2.5 bg-[#111b21] hover:bg-[#202c33] border border-slate-700 text-left rounded-xl text-white font-bold flex items-center gap-2 active:scale-95">
+                <span>❄️</span> कूलिंग बंद है
+              </button>
+              <button onclick="selectProblem('फ़ैन ब्लोअर काम नहीं कर रहा')" class="p-2.5 bg-[#111b21] hover:bg-[#202c33] border border-slate-700 text-left rounded-xl text-white font-bold flex items-center gap-2 active:scale-95">
+                <span>🌀</span> फ़ैन ब्लोअर बंद है
+              </button>
+              <button onclick="selectProblem('पानी टपक रहा है (Water Leak)')" class="p-2.5 bg-[#111b21] hover:bg-[#202c33] border border-slate-700 text-left rounded-xl text-white font-bold flex items-center gap-2 active:scale-95">
+                <span>💧</span> पानी टपक रहा
+              </button>
+              <button onclick="selectProblem('सिर्फ़ सामान्य सर्विस (General Service)')" class="p-2.5 bg-[#111b21] hover:bg-[#202c33] border border-slate-700 text-left rounded-xl text-white font-bold flex items-center gap-2 active:scale-95">
+                <span>🧰</span> सामान्य सर्विस
+              </button>
+            </div>
+
+            <!-- Optional: Upload Error Chart / Diagram sticker -->
+            <div class="p-2.5 bg-[#182229] rounded-xl border border-indigo-500/40 flex items-center justify-between mt-1">
+              <div>
+                <span class="text-indigo-300 font-bold block text-[11px]">📄 एरर कोड चार्ट या डायग्राम शीट की फोटो:</span>
+                <span class="text-[10px] text-slate-400">AC ढक्कन पर लगा स्टिकर स्कैन करें</span>
+              </div>
+              <button onclick="triggerCameraInput('diagram_sheet')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold text-xs shadow active:scale-95">
+                📸 शीट भेजें
+              </button>
+            </div>
+          </div>
+        `, "रीडिंग के हिसाब से गैस कम है। अब बताइए ग्राहक की मुख्य समस्या क्या है? क्या कूलिंग बंद है या फ़ैन ब्लोअर में दिक्कत है?");
+
+        setQuickChips([
+          { label: "❄️ कूलिंग बंद है", action: () => selectProblem('ठंडा नहीं कर रहा (कूलिंग बंद)') },
+          { label: "🌀 फ़ैन ब्लोअर बंद है", action: () => selectProblem('फ़ैन ब्लोअर काम नहीं कर रहा') },
+          { label: "📄 एरर कोड शीट स्कैन करें", action: () => triggerCameraInput('diagram_sheet') }
+        ]);
+      }, 500);
+    }
+
+    // ================= STEP 6: LOCATION SAMPLE IMAGES + GEMINI COLORIZED DIAGRAM =================
+    function selectProblem(problemDesc) {
+      applianceData.problem = problemDesc;
+      addUserMessage(`समस्या: ${problemDesc}`);
+
+      setTimeout(() => {
+        currentStep = 6;
+        if (problemDesc.includes('फ़ैन ब्लोअर')) {
+          // Blower Motor with Colorized Circuit Diagram & Capacitor Sample Image
+          addAiMessage(`
+            <div class="space-y-3">
+              <p class="font-extrabold text-[#FFC42E] text-sm">
+                🌀 फ़ैन ब्लोअर डायग्नोसिस (AI कलराइज़्ड वायरिंग व लोकेशन गाइड)
+              </p>
+              
+              <!-- LOCATION SAMPLE IMAGE: CAPACITOR LOCATION ON PCB -->
+              <div class="bg-[#111b21] p-3 rounded-xl border border-amber-500/40 space-y-2">
+                <div class="flex items-center justify-between text-amber-300 font-bold text-xs">
+                  <span>💡 सैंपल गाइड: 3.5µF कैपेसिटर कहाँ मिलेगा?</span>
+                  <span class="text-[10px] bg-amber-950 text-amber-300 px-2 py-0.5 rounded font-mono">LOCATION GUIDE</span>
+                </div>
+                
+                <div class="relative bg-slate-900 rounded-lg p-2.5 border border-slate-700 flex items-center gap-3">
+                  <div class="w-20 h-16 bg-slate-800 rounded border border-amber-400 flex flex-col items-center justify-center p-1 text-center">
+                    <span class="text-xl">🧯</span>
+                    <span class="text-[8px] text-amber-300 font-bold">3.5µF ±5%</span>
+                    <span class="text-[7px] text-slate-400">450V AC</span>
+                  </div>
+                  <div class="text-[11px] text-slate-300 space-y-1">
+                    <p>इंडोर यूनिट के दाहिनी तरफ PCB बॉक्स खोलें। काले रंग का चौकोर कैपेसिटर <strong>CN-FAN</strong> जैक के बगल में लगा होता है।</p>
+                    <span class="text-[10px] text-green-400 font-bold block">👉 मल्टीमीटर के µF मोड पर 3.2µF से कम आए तो बदलें।</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- GEMINI COLORIZED SCHEMATIC DIAGRAM -->
+              <div class="bg-slate-950 p-3 rounded-xl border border-indigo-500/60 space-y-2">
+                <div class="flex justify-between items-center text-[11px] text-indigo-300 font-bold">
+                  <span>📐 Gemini जनरेटेड BLDC/AC ब्लोअर वायरिंग डायग्राम</span>
+                  <span class="text-green-400 text-[10px] font-mono">LG OFFICIAL KB</span>
+                </div>
+
+                <svg viewBox="0 0 340 160" class="w-full h-auto text-[10px]">
+                  <!-- Indoor PCB -->
+                  <rect x="10" y="20" width="85" height="120" rx="8" fill="#1e293b" stroke="#3b82f6" stroke-width="2"/>
+                  <text x="52" y="45" fill="#60a5fa" font-weight="900" text-anchor="middle">INDOOR PCB</text>
+                  <circle cx="95" cy="70" r="5" fill="#ef4444"/>
+                  <text x="85" y="73" fill="white" font-size="8" text-anchor="end">L (Phase)</text>
+                  <circle cx="95" cy="95" r="5" fill="#3b82f6"/>
+                  <text x="85" y="98" fill="white" font-size="8" text-anchor="end">N (Neutral)</text>
+                  <circle cx="95" cy="120" r="5" fill="#eab308"/>
+                  <text x="85" y="123" fill="white" font-size="8" text-anchor="end">FB (Pulse)</text>
+
+                  <!-- 3.5uF Fan Capacitor -->
+                  <rect x="140" y="15" width="60" height="42" rx="6" fill="#0f172a" stroke="#eab308" stroke-width="2"/>
+                  <text x="170" y="35" fill="#facc15" font-weight="bold" font-size="9" text-anchor="middle">3.5µF CAP</text>
+                  <circle cx="145" cy="40" r="3" fill="#ef4444"/>
+                  <circle cx="195" cy="40" r="3" fill="#ef4444"/>
+
+                  <!-- Blower Motor -->
+                  <circle cx="280" cy="80" r="45" fill="#1e293b" stroke="#10b981" stroke-width="2.5"/>
+                  <text x="280" y="75" fill="#34d399" font-weight="900" text-anchor="middle">BLOWER</text>
+                  <text x="280" y="90" fill="#94a3b8" font-size="8" text-anchor="middle">MOTOR</text>
+                  <circle cx="238" cy="65" r="4" fill="#ef4444"/>
+                  <circle cx="238" cy="85" r="4" fill="#3b82f6"/>
+                  <circle cx="238" cy="105" r="4" fill="#eab308"/>
+
+                  <!-- Connecting Colorized Wires -->
+                  <path d="M 95 70 L 145 40" fill="none" stroke="#ef4444" stroke-width="2.5"/>
+                  <path d="M 195 40 L 238 65" fill="none" stroke="#ef4444" stroke-width="2.5"/>
+                  <path d="M 95 95 L 238 85" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+                  <path d="M 95 120 L 238 105" fill="none" stroke="#eab308" stroke-width="2" stroke-dasharray="3,2"/>
+                </svg>
+
+                <div class="grid grid-cols-3 gap-1 text-[9px] text-slate-300 pt-1.5 border-t border-slate-800 text-center font-bold">
+                  <span class="text-red-400">● लाल (230V Phase)</span>
+                  <span class="text-blue-400">● नीला (Neutral)</span>
+                  <span class="text-yellow-400">● पीला (Hall Sensor)</span>
+                </div>
+              </div>
+
+              <button onclick="proceedToQuotation('capacitor_fix')" class="w-full py-2.5 bg-[#00a884] hover:bg-emerald-600 text-white rounded-xl font-black text-xs shadow active:scale-95">
+                ✓ कैपेसिटर टेस्ट व रिप्लेस हो गया, कोटेशन बनाएं
+              </button>
+            </div>
+          `, "फ़ैन ब्लोअर के लिए सबसे पहले 3.5 माइक्रो फैराड का कैपेसिटर चेक करें। सैंपल फोटो में कैपेसिटर की लोकेशन और रंगीन वायरिंग डायग्राम देख सकते हैं।");
+
+          setQuickChips([
+            { label: "✓ कैपेसिटर बदल दिया", action: () => proceedToQuotation('capacitor_fix') },
+            { label: "📸 वायरिंग फोटो अपलोड करें", action: () => triggerCameraInput('diagram_sheet') }
+          ]);
+
+        } else {
+          // Cooling Issue with Location Sample: SOAP BUBBLE ON FLARE NUT
+          addAiMessage(`
+            <div class="space-y-3">
+              <p class="font-extrabold text-[#FFC42E] text-sm">
+                ❄️ गैस लीकेज डायग्नोसिस व लोकेशन सैंपल (Soap Bubble Guide)
+              </p>
+
+              <!-- LOCATION SAMPLE IMAGE: SOAP BUBBLES ON FLARE NUT -->
+              <div class="bg-[#111b21] p-3 rounded-xl border border-red-500/50 space-y-2">
+                <div class="flex items-center justify-between text-red-300 font-bold text-xs">
+                  <span>💡 सैंपल फोटो: फ्लेयर नट पर झाग ऐसे चेक करें</span>
+                  <span class="text-[10px] bg-red-950 text-red-300 px-2 py-0.5 rounded font-mono">LEAK LOCATION GUIDE</span>
+                </div>
+
+                <!-- Visual Graphic of Valve & Bubbles -->
+                <div class="relative bg-slate-900 rounded-lg p-3 border border-slate-700 flex items-center gap-3">
+                  <div class="w-24 h-20 bg-amber-950/40 rounded-lg border-2 border-amber-500/60 flex flex-col items-center justify-center p-1 relative overflow-hidden">
+                    <!-- Brass Valve representation -->
+                    <div class="w-12 h-6 bg-amber-500 rounded-sm"></div>
+                    <div class="w-6 h-8 bg-amber-600 rounded-sm"></div>
+                    <!-- Bubbles swelling -->
+                    <div class="absolute top-2 right-3 w-4 h-4 rounded-full bg-blue-200/80 border border-white animate-ping"></div>
+                    <div class="absolute top-3 right-4 w-5 h-5 rounded-full bg-blue-100/90 border border-white"></div>
+                    <span class="text-[7px] text-amber-200 font-black mt-1">FLARE NUT</span>
+                  </div>
+
+                  <div class="text-[11px] text-slate-300 space-y-1">
+                    <p class="font-bold text-white">आउटडोर यूनिट का सर्विस वाल्व:</p>
+                    <p>साबुन के पानी का झाग फ्लेयर नट के जोड़ पर लगाएं। <strong>अगर झाग में बुलबुला फूले</strong> तो 100% वहीं से गैस लीक हो रही है।</p>
+                    <span class="text-[10px] text-red-400 font-bold block">🔒 बिना लीकेज बंद किए गैस डालना मना है!</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Approved Steps -->
+              <div class="bg-red-950/60 border border-red-500/60 p-2.5 rounded-xl text-xs space-y-1">
+                <span class="font-extrabold text-red-200 block">🔒 कंपनी सुरक्षा नियम:</span>
+                <p class="text-[11px] text-slate-300">
+                  1. फ्लेयर नट टाइट करें ➜ 2. नाइट्रोजन प्रेशर टेस्ट ➜ 3. 500 माइक्रोन तक वैक्यूम ➜ 4. तौलकर 650g असली R32 गैस डालें।
+                </p>
+              </div>
+
+              <button onclick="proceedToQuotation('gas_leak_fix')" class="w-full py-2.5 bg-[#00a884] hover:bg-emerald-600 text-white rounded-xl font-black text-xs shadow active:scale-95">
+                ✓ लीकेज ठीक हो गई, ग्राहक बिल व कोटेशन देखें
+              </button>
+            </div>
+          `, "सक्शन प्रेशर 40 PSI है। सैंपल फोटो में देखें कि आउटडोर फ्लेयर नट पर साबुन का झाग कैसे लगाकर लीकेज चेक करनी है। सीधी गैस डालना मना है।");
+
+          setQuickChips([
+            { label: "✓ लीकेज ठीक की, कोटेशन बनाएं", action: () => proceedToQuotation('gas_leak_fix') }
+          ]);
+        }
+      }, 500);
+    }
+
+    // ================= STEP 7: ERROR SHEET SCAN HANDLER =================
+    function handleDiagramSheetScanned() {
+      addUserMessage("📸 [एरर कोड चार्ट व वायरिंग शीट की फोटो भेजी गई]");
+
+      setTimeout(() => {
+        addAiMessage(`
+          <div class="space-y-2.5">
+            <div class="flex items-center justify-between text-[#FFC42E] font-bold text-xs">
+              <span>✨ शीट एनालिसिस: LG Q18 मॉडल डिकोड सफल</span>
+              <span class="text-[10px] bg-green-950 text-green-300 px-2 py-0.5 rounded font-mono">SHEET PARSED</span>
+            </div>
+
+            <!-- Error Code Look-up Matrix -->
+            <div class="bg-[#111b21] p-3 rounded-xl border border-slate-700 space-y-2 text-xs">
+              <span class="text-white font-bold block text-[11px]">📋 आधिकारिक एरर कोड मैट्रिक्स (LG Error Codes):</span>
+              
+              <div class="space-y-1.5 text-[11px]">
+                <div class="p-1.5 bg-red-950/40 border border-red-500/40 rounded flex justify-between items-center">
+                  <span class="font-bold text-red-300">CH01 / E1:</span>
+                  <span class="text-slate-300">इंडोर रूम टेम्परेचर सेंसर ओपन / गैस लीकेज</span>
+                </div>
+                <div class="p-1.5 bg-[#182229] border border-slate-700 rounded flex justify-between items-center">
+                  <span class="font-bold text-amber-300">CH05:</span>
+                  <span class="text-slate-300">इंडोर-आउटडोर कम्युनिकेशन सिग्नल फॉल्ट</span>
+                </div>
+                <div class="p-1.5 bg-[#182229] border border-slate-700 rounded flex justify-between items-center">
+                  <span class="font-bold text-cyan-300">CH21:</span>
+                  <span class="text-slate-300">DC Peak Current / इनवर्टर कंप्रेसर IPM ओवरलोड</span>
+                </div>
+              </div>
+            </div>
+
+            <p class="text-slate-300 text-[11px]">
+              AI ने शीट पढ़कर पूरा सिस्टम मैप कर लिया है। अब समस्या चुनकर आगे बढ़ें।
+            </p>
+          </div>
+        `, "मैंने एरर कोड शीट स्कैन कर ली है। CH01 का मतलब गैस लीकेज और सेंसर फॉल्ट है।");
+
+        setQuickChips([
+          { label: "❄️ कूलिंग समस्या हल करें", action: () => selectProblem('ठंडा नहीं कर रहा (कूलिंग बंद)') },
+          { label: "🌀 फ़ैन ब्लोअर चेक करें", action: () => selectProblem('फ़ैन ब्लोअर काम नहीं कर रहा') }
+        ]);
+      }, 600);
+    }
+
+    // ================= STEP 8: TRANSPARENT QUOTATION & OTP =================
+    function proceedToQuotation(fixType) {
+      addUserMessage("✓ रिपेयर पूरा हो गया है, पक्का बिल व कोटेशन जनरेट करें।");
+
+      setTimeout(() => {
+        currentStep = 7;
+        addAiMessage(`
+          <div class="space-y-2.5">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-1.5 text-xs">
+              <span class="font-bold text-[#FFC42E]">💰 पारदर्शी कोटेशन (कंपनी रेट कार्ड)</span>
+              <span class="bg-green-950 text-green-300 border border-green-700 px-2 py-0.2 rounded text-[10px] font-bold">45 दिन वारंटी</span>
+            </div>
+
+            <div class="bg-[#111b21] p-3 rounded-xl border border-slate-700 space-y-2 text-xs">
+              <div class="flex justify-between py-1 border-b border-slate-800 text-slate-300">
+                <span>विज़िट व जाँच चार्ज:</span>
+                <span class="font-bold text-white">₹199</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-slate-800 text-slate-300">
+                <span>फ्लेयर नट लीकेज रिपेयर + नाइट्रोजन प्रेशर:</span>
+                <span class="font-bold text-white">₹350</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-slate-800 text-slate-300">
+                <span>वैक्यूम पंपिंग (500 Microns):</span>
+                <span class="font-bold text-white">₹250</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-slate-800 text-slate-300">
+                <span>असली R32 गैस (650g वज़न अनुसार):</span>
+                <span class="font-bold text-white">₹600</span>
+              </div>
+              <div class="flex justify-between pt-1 text-sm font-black text-white">
+                <span>कुल राशि (Total Amount):</span>
+                <span class="text-[#FFC42E] text-base">₹1,399</span>
+              </div>
+            </div>
+
+            <!-- OTP Box -->
+            <div class="bg-[#182229] p-3 rounded-xl border border-amber-400/50 space-y-2">
+              <div class="flex justify-between items-center text-[11px]">
+                <span class="text-amber-300 font-bold">काम पूरा होने पर ग्राहक OTP से बंद करें:</span>
+                <span class="bg-amber-400 text-slate-950 px-1.5 rounded font-mono font-black text-[10px]">OTP: 4829</span>
+              </div>
+              <div class="flex gap-2">
+                <input type="text" id="inChatOtp" placeholder="4829" maxlength="4" class="flex-1 bg-[#2a3942] text-white p-2 text-center font-black rounded-lg text-sm border border-slate-600 focus:outline-none">
+                <button onclick="verifyChatOtp()" class="px-3.5 py-2 bg-[#00a884] hover:bg-emerald-600 text-white font-bold text-xs rounded-lg shadow active:scale-95">
+                  जॉब बंद करें ✅
+                </button>
+              </div>
+            </div>
+          </div>
+        `, "कुल खर्चा ₹1,399 हुआ है। 45 दिन की वारंटी के साथ जॉब बंद करने के लिए ग्राहक का 4 अंकों का OTP डालें।");
+
+        setQuickChips([
+          { label: "✅ OTP डालें (4829)", action: () => {
+            const el = document.getElementById('inChatOtp');
+            if (el) el.value = "4829";
+            verifyChatOtp();
+          }}
+        ]);
+      }, 500);
+    }
+
+    function verifyChatOtp() {
+      const otp = document.getElementById('inChatOtp')?.value;
+      if (otp === '4829' || otp?.length === 4) {
+        addUserMessage(`✓ ग्राहक OTP दर्ज किया: ${otp}`);
+        setTimeout(() => {
+          addAiMessage(`
+            <div class="space-y-2.5 text-center p-2">
+              <span class="text-4xl block">🎉</span>
+              <p class="font-black text-[#FFC42E] text-sm">जॉब सफलतापूर्वक पूर्ण हुई!</p>
+              <p class="text-xs text-slate-300">
+                डिजिटल बिल और 45 दिन का वारंटी कार्ड ग्राहक के WhatsApp पर भेज दिया गया है।
+              </p>
+              <div class="bg-green-950/80 border border-green-500/50 p-2.5 rounded-xl text-green-300 text-xs font-bold mt-2">
+                🌟 आपका प्रदर्शन उत्कृष्ट रहा! AI एक्यूरेसी स्कोर: 100%
+              </div>
+              <button onclick="restartDemo()" class="mt-3 px-4 py-2 bg-[#FFC42E] text-slate-950 font-black rounded-xl text-xs shadow active:scale-95">
+                🔄 नई जॉब शुरू करें
+              </button>
+            </div>
+          `, "बधाई हो टेक्नीशियन भाई! जॉब सफलतापूर्वक बंद हो गई है और 45 दिन की वारंटी शुरू हो चुकी है।");
+
+          setQuickChips([
+            { label: "🔄 नई जॉब शुरू करें", action: () => restartDemo() }
+          ]);
+        }, 400);
+      } else {
+        alert("कृपया सही 4 अंकों का OTP (4829) डालें।");
+      }
+    }
+
+    // ================= CAMERA & MODAL HELPERS =================
+    async function triggerCameraInput(context = 'general') {
+      currentCameraContext = context;
+      const modal = document.getElementById('cameraModal');
+      const video = document.getElementById('cameraVideo');
+      const title = document.getElementById('camModalTitle');
+      const tag = document.getElementById('camOverlayTag');
+      const hint = document.getElementById('camOverlayHint');
+
+      if (context === 'safety_proof') {
+        title.innerText = "सुरक्षा सबूत: MCB / ग्लव्स की फोटो लें";
+        tag.innerText = "[SAFETY AUDIT SCANNER]";
+        hint.innerText = "बंद MCB या दस्ताने पहने हाथ को बॉक्स में लाएं";
+      } else if (context === 'diagram_sheet') {
+        title.innerText = "वायरिंग या एरर कोड शीट स्कैन करें";
+        tag.innerText = "[DIAGRAM SHEET PARSER]";
+        hint.innerText = "AC के ढक्कन पर चिपके स्टिकर को बॉक्स में रखें";
+      } else {
+        title.innerText = "AC नेमप्लेट या मीटर स्कैन करें";
+        tag.innerText = "[NAMEPLATE SCANNER]";
+        hint.innerText = "नेमप्लेट को बॉक्स के बीच में रखें";
+      }
+
+      modal.classList.remove('hidden');
+
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: cameraFacing } },
+          audio: false
+        });
+        video.srcObject = cameraStream;
+      } catch (err) {
+        console.warn("Camera fallback:", err);
+      }
+    }
+
+    function closeCameraModal() {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(t => t.stop());
+      }
+      document.getElementById('cameraModal').classList.add('hidden');
+    }
+
+    async function switchCameraAngle() {
+      cameraFacing = (cameraFacing === 'environment') ? 'user' : 'environment';
+      closeCameraModal();
+      await triggerCameraInput(currentCameraContext);
+    }
+
+    function captureCameraPhoto() {
+      closeCameraModal();
+      handleDemoSnapshot();
+    }
+
+    function handleDemoSnapshot() {
+      closeCameraModal();
+      if (currentCameraContext === 'safety_proof') {
+        autoPassSafetyWithProof();
+      } else if (currentCameraContext === 'diagram_sheet') {
+        handleDiagramSheetScanned();
+      } else {
+        handlePhotoReceived('LG Dual Inverter 1.5T Nameplate');
+      }
+    }
+
+    function sendQuickText(text) {
+      addUserMessage(text);
+      if (currentStep === 1) {
+        handlePhotoReceived('AC Nameplate & Stabilizer');
+      }
+    }
+
+    function handleUserSendMessage() {
+      const input = document.getElementById('userTextInput');
+      const text = input.value.trim();
+      if (!text) return;
+      addUserMessage(text);
+      input.value = "";
+
+      const numMatch = text.match(/([0-9.]+)/);
+      if (numMatch && (text.toLowerCase().includes('psi') || currentStep === 4)) {
+        setMeterQuick(numMatch[1]);
+        return;
+      }
+
+      setTimeout(() => {
+        if (text.includes('thanda') || text.includes('cooling') || text.includes('ठंडा')) {
+          selectProblem('ठंडा नहीं कर रहा (कूलिंग बंद)');
+        } else if (text.includes('blower') || text.includes('fan') || text.includes('पंखा') || text.includes('ब्लोअर')) {
+          selectProblem('फ़ैन ब्लोअर काम नहीं कर रहा');
+        } else if (text.includes('diagram') || text.includes('sheet') || text.includes('शीट') || text.includes('डायग्राम')) {
+          handleDiagramSheetScanned();
+        } else if (text.includes('kharcha') || text.includes('paisa') || text.includes('बिल') || text.includes('खर्चा')) {
+          proceedToQuotation('general');
+        } else {
+          addAiMessage(`
+            <p class="text-xs text-slate-200">
+              मैंने नोट कर लिया: "<strong>${text}</strong>"। 
+              कृपया नीचे दिए गए बटनों से अगला स्टेप चुनें:
+            </p>
+          `, text);
+        }
+      }, 400);
+    }
+
+    function restartDemo() {
+      initConversation();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initConversation();
+    });
+  </script>
+</body>
+</html>

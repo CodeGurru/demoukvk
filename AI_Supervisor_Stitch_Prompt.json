@@ -1,0 +1,300 @@
+{
+  "project": {
+    "name": "AI Supervisor by Bijli Wala Aya",
+    "type": "Mobile-first web app (PWA), 3 roles in one app: Customer, Technician, Admin",
+    "one_line": "An AI senior supervisor for home-appliance (Split AC) repair: helps customers first, then guides technicians step by step with physics-based checks, live camera + voice AI, official wiring diagrams, safety gates and transparent reports.",
+    "target_users": [
+      "Customers in Tier-2/Tier-3 Indian cities (e.g., Ayodhya) — Hindi-first, low tech comfort, budget-conscious",
+      "Ground-level AC technicians — busy hands, outdoor sunlight, cheap Android phones, need big buttons and voice",
+      "Admin / company owner — manages knowledge base and AI accuracy"
+    ],
+    "language": "Hindi primary (Devanagari) with small English sub-labels; all numbers and units in English digits",
+    "must_feel": "Trustworthy, simple, fast, premium but friendly — same family as the existing Bijli Wala Aya app"
+  },
+
+  "design_system": {
+    "brand_match": "Match existing Bijli Wala Aya app (bijliwalaa.com) exactly",
+    "colors": {
+      "primary": "#FFC42E",
+      "primary_pressed": "#F2B10F",
+      "primary_soft": "#FFF4D6",
+      "text_primary": "#111827",
+      "text_secondary": "#4B5563",
+      "text_muted": "#6B7280",
+      "background": "#F1F5F9",
+      "surface_card": "#FFFFFF",
+      "border": "#E5E7EB",
+      "ai_accent": "#2563EB",
+      "ai_accent_soft": "#EFF6FF",
+      "success": "#16A34A",
+      "warning": "#F59E0B",
+      "danger": "#DC2626",
+      "locked": "#9CA3AF",
+      "dark_mode_bg": "#0F172A",
+      "dark_mode_card": "#1E293B"
+    },
+    "typography": {
+      "font_family": "Inter (Latin), Noto Sans Devanagari (Hindi)",
+      "h1": "24px / 700",
+      "h2": "20px / 700",
+      "h3": "16px / 600",
+      "body": "15px / 400",
+      "caption": "12px / 500",
+      "reading_numbers": "28px / 700 tabular figures (for live readings like PSI, Amp, Volt)"
+    },
+    "shape": {
+      "card_radius": "16px",
+      "button_radius": "16px",
+      "chip_radius": "9999px (pill)",
+      "bottom_sheet_radius": "24px top corners",
+      "icon_buttons": "circular white with soft shadow"
+    },
+    "elevation": "Soft shadows (0 4px 16px rgba(17,24,39,0.06)); modals with blurred backdrop (glass effect)",
+    "spacing": "8px grid; screen padding 16px; min touch target 48x48px",
+    "icons": "Rounded line icons (Lucide style); 3D illustrated appliance images for service tiles",
+    "motion": "Subtle: 150–250ms ease-out; AI voice waveform animation; pulsing mic while listening",
+    "accessibility": "WCAG AA contrast, never color-only status (always icon + text), large text option, works in bright sunlight, dark mode toggle"
+  },
+
+  "global_components": [
+    {"name": "Top header", "spec": "Avatar circle (orange), greeting 'नमस्ते, {name}', city chip with location pin (e.g., 'अयोध्या'), icons: search, notification bell with badge, dark-mode toggle"},
+    {"name": "Bottom navigation (role-based)", "spec": "5 items with center floating circular yellow button; active item yellow pill highlight"},
+    {"name": "AI Assistant FAB", "spec": "Floating circular button with sparkle + mic icon, blue AI accent ring, label 'AI से पूछें'"},
+    {"name": "Confidence badge", "spec": "Pill with % and label: ≥75 green 'भरोसा ज़्यादा', 50–74 amber 'और जाँचें', <50 red 'पक्का नहीं'"},
+    {"name": "Locked action chip", "spec": "Grey chip with lock icon 🔒 + short reason, e.g., 'Gas भरना लॉक – पहले leak test + vacuum'; tap opens bottom sheet explaining why"},
+    {"name": "Safety banner", "spec": "Red/amber full-width banner with ⚡ icon for high-voltage/high-pressure steps"},
+    {"name": "Reading input card", "spec": "Big number field with unit (PSI, A, V, °C), +/− steppers, mic button to speak value, normal-range hint below in small text, status dot (green/amber/red)"},
+    {"name": "Stepper", "spec": "Horizontal progress bar with step numbers 1–11 at top + current step title; completed = green check, locked = grey lock"},
+    {"name": "Evidence photo tile", "spec": "Square thumbnail with label (Before/After/Nameplate/Voltage), timestamp, retake icon"},
+    {"name": "AI message bubble", "spec": "Blue-tinted bubble with small 'AI Supervisor' label, speaker icon to play voice, optional evidence chips (e.g., 'Superheat 18K', 'Amp 62%')"},
+    {"name": "Empty / error / offline states", "spec": "Friendly illustration + Hindi message + retry button; offline banner 'नेटवर्क कमज़ोर – rules वाले सुझाव दिख रहे हैं'"}
+  ],
+
+  "screens": {
+    "auth": [
+      {
+        "id": "A1_splash_role",
+        "title": "Splash + Role select",
+        "elements": [
+          "Bijli Wala Aya logo + 'AI Supervisor' wordmark with sparkle",
+          "Tagline: 'हर repair, सही जाँच के साथ'",
+          "3 large role cards with icons: 'मैं ग्राहक हूँ', 'मैं Technician हूँ', 'Admin'",
+          "Demo mode chip at bottom: 'Demo देखें'"
+        ]
+      },
+      {
+        "id": "A2_login_otp",
+        "title": "WhatsApp OTP login (bottom sheet)",
+        "elements": ["Phone icon tile (yellow)", "'Welcome Back' / 'WhatsApp नंबर डालें'", "+91 field", "Get OTP primary button", "Terms & Privacy links"]
+      }
+    ],
+
+    "customer": [
+      {
+        "id": "C1_home",
+        "title": "Customer Home",
+        "elements": [
+          "Top header with city chip",
+          "Hero AI card (blue-yellow gradient): 'अपनी समस्या बोलिए, AI तुरंत मदद करेगा' + big mic button + 'Photo भेजें' + 'Chat करें'",
+          "My AC card: brand logo, 'LG 1.5 Ton Inverter • R32', last service date, warranty chip '45 दिन warranty – 32 दिन बचे'",
+          "Quick problem chips: 'ठंडा नहीं कर रहा', 'पानी टपक रहा', 'आवाज़ आ रही', 'Error code', 'Bill ज़्यादा', 'बार-बार trip'",
+          "Select Service grid (3D images): AC, Washing Machine, Fridge, TV, RO, Geyser (only AC active, others 'जल्द आ रहा')",
+          "Bottom nav: Home, My Bookings, [center: AI FAB], Bill Calculator, Profile"
+        ]
+      },
+      {
+        "id": "C2_ai_chat",
+        "title": "AI Chat (customer)",
+        "elements": [
+          "Header: 'AI Supervisor' with green online dot + 'Voice call' icon",
+          "Memory card at top (collapsible): 'पिछली बार (12 Nov): gas कम थी, flare leak ठीक किया गया'",
+          "Conversation: user bubbles (white), AI bubbles (blue tint) with speaker icon",
+          "AI suggests safe self-checks as checklist cards: 'Remote Cool mode पर है?', 'Filter साफ़ है?', 'MCB ON है?' each with ✅/❌ buttons",
+          "Inline explainer card: 'R32 gas क्या है? असली बनाम लोकल gas' with simple icon",
+          "Composer: text field, mic button (large), camera/photo button, send",
+          "When unresolved: AI action card 'Technician बुक करें' with issue summary, urgency chip, location chip and 'Book करें' primary button"
+        ]
+      },
+      {
+        "id": "C3_voice_call",
+        "title": "AI Voice Call (full screen, like a real phone call)",
+        "elements": [
+          "Dark gradient background, large animated AI avatar orb with voice waveform",
+          "Caller label 'Bijli Wala Aya – AI Supervisor', call timer",
+          "Live captions (Hindi) scrolling at bottom",
+          "Buttons: mute, speaker, camera on/off (to show AC), end call (red)",
+          "Small chip 'AI बात समझ रहा है…' while thinking"
+        ]
+      },
+      {
+        "id": "C4_booking_confirm",
+        "title": "Booking Confirmed",
+        "elements": [
+          "Success check animation",
+          "Technician card: photo, name 'Kartik', rating, skills chips 'AC Expert', distance '2.4 km'",
+          "Job ID, problem summary, address with map thumbnail",
+          "Status timeline: Booked → Technician assigned → On the way → Started → Completed",
+          "Buttons: 'Technician को call करें', 'AI से बात करें'"
+        ]
+      },
+      {
+        "id": "C5_consent_quote",
+        "title": "Consent + Quotation approval",
+        "elements": [
+          "Section 'काम से पहले शर्तें' with 3 plain-Hindi bullet cards: जाँच charge ₹X; gas सिर्फ़ leak test + vacuum के बाद; gas के बाद compressor कमज़ोर निकला तो खर्च अलग",
+          "Quotation table: items (Leak repair, R32 gas by weight, Labour), price, total — with AI 'क्यों?' info icons",
+          "AI explanation card in simple Hindi with evidence chips (Voltage 228V ✅, Superheat 18K ⚠)",
+          "Checkbox 'मैं सहमत हूँ' + primary 'Approve करें' + secondary 'सवाल पूछें'"
+        ]
+      },
+      {
+        "id": "C6_report",
+        "title": "Job Report & Feedback",
+        "elements": [
+          "OTP display card for closing job",
+          "Report: appliance, before/after readings side-by-side (green improvements), photos grid, work done, parts with brand + warranty, total cost, technician, AI confidence",
+          "Installation quality badges (if installation): Copper 0.8mm ✅, Insulation 13mm ✅, Vacuum 500 micron ✅",
+          "Warranty card '45 दिन – till 3 Jan 2027'",
+          "Rating stars + 'Share report' + 'Download PDF'"
+        ]
+      },
+      {
+        "id": "C7_bill_calculator",
+        "title": "Bill & Star Rating Calculator",
+        "elements": [
+          "Inputs: label units (kWh/year), daily hours, days, ₹ per unit",
+          "Result card: monthly + yearly bill big numbers",
+          "Compare 3-star vs 5-star bar chart + payback years",
+          "Tip chips: '24°C पर चलाएँ', 'Filter हर 2 हफ़्ते साफ़ करें'"
+        ]
+      }
+    ],
+
+    "technician": [
+      {
+        "id": "T1_leads",
+        "title": "Technician Home – Leads",
+        "elements": [
+          "Header with online/offline toggle (big switch), today's earnings chip",
+          "New lead card with yellow glow: customer area, distance, problem chips, AI pre-diagnosis 'संभावना: Gas कम (60%)', Accept/Reject buttons",
+          "Today's jobs list with status chips",
+          "Bottom nav: Leads, My Jobs, [center: Live AI Supervisor FAB], Tools, Profile"
+        ]
+      },
+      {
+        "id": "T2_job_stepper",
+        "title": "Job Workflow Stepper (MAIN DEMO SCREEN)",
+        "layout": "Top: stepper progress (11 steps) + job summary chip; Middle: current step card; Bottom: sticky bar with 'Live AI' button and 'अगला step' primary button",
+        "steps": [
+          {"n": 1, "name": "Customer consent", "ui": "Status card: 'ग्राहक ने शर्तें मान लीं ✅ 10:42 AM'"},
+          {"n": 2, "name": "Safety gate", "ui": "Checklist with large toggles: Power OFF, MCB OFF, Capacitor discharged, Gloves, No water near PCB, Inverter DC bus <36V; next steps locked until all ticked"},
+          {"n": 3, "name": "Appliance", "ui": "'Nameplate की photo लें' camera card → auto-filled fields with confidence dots (Brand, Model, Ton, Inverter, Refrigerant, Rated Amp); editable"},
+          {"n": 4, "name": "Problem", "ui": "Large selectable chips with icons: No cooling, Less cooling, Water leak, Noise, Error code, Trip, Service"},
+          {"n": 5, "name": "Field checks (no gauge yet)", "ui": "Touch/Listen checklist: suction pipe ठंडा?, ice कहाँ?, compressor आवाज़?, बदबू? + note 'Gauge अभी नहीं – पहले clamp meter'"},
+          {"n": 6, "name": "Readings", "ui": "Reading input cards grid: Voltage (load), Amp, Suction PSI, Discharge PSI, Suction pipe °C, Liquid pipe °C, Grill/Room/Outdoor °C; Inverter test-mode toggle; mic button to speak values; gauge warning chip"},
+          {"n": 7, "name": "Rules + AI Diagnosis", "ui": "Physics card (calculated: Superheat 18K, Subcooling 2K, Amp ratio 62%) + diagnosis list with confidence badges + reasoning accordion + locked actions chips (e.g., 'Gas भरना 🔒', 'Capacitor बदलना 🔒 – µF ठीक है')"},
+          {"n": 8, "name": "Guided steps", "ui": "Vertical step list; each step card: instruction (Hindi), safety level icon, expected reading, ✅/❌ buttons, 'Diagram देखें', 'AI से पूछें'"},
+          {"n": 9, "name": "Quotation", "ui": "Parts + labour builder, sends to customer, waiting state 'ग्राहक approval का इंतज़ार'"},
+          {"n": 10, "name": "After readings & evidence", "ui": "Before vs After comparison cards, after photos, voltage proof photo; low-voltage warning card 'Supply issue – ग्राहक को समझाएँ' button"},
+          {"n": 11, "name": "Close & Feedback", "ui": "OTP input, auto report preview, 'AI सही था?' thumbs up/down + actual fault dropdown"}
+        ]
+      },
+      {
+        "id": "T3_live_ai_supervisor",
+        "title": "Live AI Supervisor (camera + voice) — HERO SCREEN",
+        "elements": [
+          "Full-screen live camera view of the AC/PCB",
+          "Top overlay: job chip 'LG 1.5T • R32', recording dot, connection quality",
+          "AI detection overlays: rounded boxes with labels (e.g., 'Service valve', 'Capacitor 35+2.5µF', 'Burnt mark?') and confidence",
+          "Bottom glass panel: animated AI voice orb + live Hindi captions of both technician and AI",
+          "Auto-captured reading chips sliding in: 'Suction 85 PSI saved ✅'",
+          "Quick actions: 'Photo लें', 'Diagram', 'Rules चलाएँ', 'Torch', mute, end",
+          "Safety banner appears when AI detects high-voltage area"
+        ]
+      },
+      {
+        "id": "T4_diagram_viewer",
+        "title": "Official Wiring Diagram Viewer",
+        "elements": [
+          "Badge 'Official • LG Service Manual' (or red state 'Official diagram उपलब्ध नहीं – Admin से अपलोड कराएँ' with no generated diagram)",
+          "Zoomable diagram image",
+          "Color legend list: wire color swatch → terminal → function (L, N, Earth, C/S/R, Fan, Sensor)",
+          "Tap-to-mark pins, confidence badge, 'AI redraw – verify' watermark toggle"
+        ]
+      },
+      {
+        "id": "T5_tools",
+        "title": "Technician Calculators",
+        "elements": [
+          "Grid of tool cards: PT / Superheat / Subcooling, Capacitor check, Winding check (C-S-R / U-V-W), Wire & MCB advisor, Bill calculator, Ton finder",
+          "Each tool screen: inputs, big result with ✅/❌, explanation in Hindi, 'Job में save करें'"
+        ]
+      },
+      {
+        "id": "T6_dispute_assist",
+        "title": "'ग्राहक को समझाओ' (Dispute assist) bottom sheet",
+        "elements": [
+          "AI generated simple explanation with readings/photos as proof",
+          "Play voice in Hindi button, Share to customer, 'Support से जोड़ें' button",
+          "Calm tone illustration"
+        ]
+      }
+    ],
+
+    "admin": [
+      {
+        "id": "AD1_dashboard",
+        "title": "Admin Dashboard",
+        "elements": [
+          "KPI cards: Total jobs, Completed, AI accuracy %, Avg time per job, 'Gas बचाई (jobs)', Blocked wrong actions",
+          "Line chart: AI accuracy over time; bar chart: accuracy by fault type",
+          "Recent feedback table: job, AI prediction, actual, ✅/❌, technician",
+          "Desktop-responsive layout with left sidebar (Dashboard, Knowledge, Reference values, Technicians, Jobs)"
+        ]
+      },
+      {
+        "id": "AD2_knowledge",
+        "title": "Knowledge Base Manager",
+        "elements": [
+          "Upload card: brand, model pattern, doc type (Wiring / Error codes / Manual), file drop zone, verified toggle",
+          "Table of docs with brand logos, type chips, verified badge, actions",
+          "Error code editor: brand, code, meaning, causes, checks, source link"
+        ]
+      },
+      {
+        "id": "AD3_reference_values",
+        "title": "Reference Values Editor",
+        "elements": [
+          "Grouped list: Refrigerant PT, Pressure ranges, Amp ranges, Wire/MCB table, Capacitor tolerance",
+          "Each row: value, unit, source link, 'Verified' toggle (unverified rows show amber 'typical value')"
+        ]
+      }
+    ]
+  },
+
+  "key_flows_to_prototype": [
+    "Customer: Home → mic 'AC ठंडा नहीं कर रहा' → AI chat self-checks → Book technician → Booking confirmed",
+    "Technician: Lead accept → Stepper safety → Nameplate photo auto-fill → Readings → Diagnosis with locked 'Gas भरना' → Live AI Supervisor camera → Diagram → Quotation → After readings → OTP close → Feedback",
+    "Customer: Consent & quotation approve → Report + warranty",
+    "Admin: Upload diagram → Dashboard accuracy update"
+  ],
+
+  "sample_content": {
+    "customer_name": "Kishan",
+    "technician_name": "Kartik",
+    "city": "Ayodhya",
+    "appliance": "LG 1.5 Ton Inverter Split AC, R32",
+    "readings_example": {"voltage": "228 V", "amp": "4.1 A (rated 6.6 A)", "suction": "85 PSI", "suction_pipe": "18 °C", "liquid_pipe": "38 °C", "grill": "19 °C", "room": "29 °C"},
+    "diagnosis_example": "Gas कम / leak की संभावना – 84% भरोसा। पहले leak ढूँढें, gas भरना अभी लॉक है।",
+    "error_code_example": "CH38 – refrigerant कम (protection)"
+  },
+
+  "output_requirements": [
+    "Generate ALL screens listed above as high-fidelity mobile screens (390x844), plus Admin screens in desktop (1440x900) and mobile",
+    "Use the exact design_system colors, Inter + Noto Sans Devanagari fonts, 16px radius cards, pill chips, yellow primary buttons",
+    "Hindi-first copy exactly as given; realistic Indian context (₹, Ayodhya, Indian brands LG/Daikin/Voltas)",
+    "Show states: loading, empty, error, offline, locked action, success",
+    "Include light and dark mode variants for Customer Home and Live AI Supervisor",
+    "Keep consistent component styles across all screens so it can be exported as one design system"
+  ]
+}
