@@ -1,0 +1,62 @@
+{
+  "system": {
+    "project": "AI Supervisor",
+    "company": "UKVK Services Technologies Pvt. Ltd.",
+    "brand": "Bijli Wala Aya"
+  },
+  "refrigerants": {
+    "R32": {
+      "typical_suction_psi_min": 115,
+      "typical_suction_psi_max": 135,
+      "discharge_psi_min": 350,
+      "discharge_psi_max": 420,
+      "target_superheat_k": [5, 8],
+      "flammability_class": "A2L (Mildly Flammable - No open spark)",
+      "boiling_temp_c": -51.7
+    },
+    "R410A": {
+      "typical_suction_psi_min": 120,
+      "typical_suction_psi_max": 140,
+      "discharge_psi_min": 380,
+      "discharge_psi_max": 450,
+      "target_superheat_k": [5, 8],
+      "flammability_class": "A1 (Non-flammable)",
+      "boiling_temp_c": -48.5
+    },
+    "R22": {
+      "typical_suction_psi_min": 60,
+      "typical_suction_psi_max": 75,
+      "discharge_psi_min": 220,
+      "discharge_psi_max": 280,
+      "target_superheat_k": [6, 10],
+      "flammability_class": "A1",
+      "boiling_temp_c": -40.8
+    }
+  },
+  "electrical": {
+    "nominal_voltage_v": 230,
+    "safe_voltage_min": 200,
+    "safe_voltage_max": 245,
+    "critical_low_voltage": 185,
+    "inverter_dc_bus_safe_v": 36,
+    "capacitors": {
+      "indoor_fan_blower_uf": 3.5,
+      "indoor_fan_tolerance_percent": 5,
+      "outdoor_fan_uf": [2.5, 4.0],
+      "outdoor_compressor_non_inverter_1_5t_uf": [45, 55]
+    },
+    "wire_and_mcb": {
+      "1.0TR": { "copper_sqmm": 2.5, "mcb_rating_a": 16, "curve": "C-curve DP" },
+      "1.5TR": { "copper_sqmm": 2.5, "mcb_rating_a": 16, "curve": "C-curve DP" },
+      "2.0TR": { "copper_sqmm": 4.0, "mcb_rating_a": 20, "curve": "C-curve DP" }
+    }
+  },
+  "safety_gates": {
+    "mcb_turn_off": true,
+    "capacitor_discharge": true,
+    "insulated_gloves": true,
+    "vacuum_micron_target": 500,
+    "nitrogen_leak_hold_psi": 250,
+    "gas_charge_blocked_without_vacuum": true
+  }
+}
