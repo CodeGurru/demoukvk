@@ -5,6 +5,12 @@ import { AI_SUPERVISOR_SYSTEM_PROMPT } from "@/lib/gemini/prompts";
 
 const ChatRequestSchema = z.object({
   message: z.string().min(1),
+  appliance: z.object({
+    brand: z.string().optional(),
+    ton: z.string().optional(),
+    type: z.string().optional(),
+    gas: z.string().optional(),
+  }).optional(),
   currentReading: z.object({
     psi: z.number().optional(),
     voltage: z.number().optional(),
@@ -12,7 +18,7 @@ const ChatRequestSchema = z.object({
   }).optional(),
   history: z.array(z.object({
     role: z.enum(["user", "model"]),
-    parts: z.string()
+    text: z.string()
   })).optional()
 });
 
@@ -25,7 +31,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid request payload", details: parsed.error.issues }, { status: 400 });
     }
 
-    const { message, currentReading, history = [] } = parsed.data;
+    const { message, appliance, currentReading, history = [] } = parsed.data;
     const gemini = getGeminiClient();
 
     // If API Key is present, call live Google Gemini API
@@ -35,19 +41,42 @@ export async function POST(req: NextRequest) {
         systemInstruction: AI_SUPERVISOR_SYSTEM_PROMPT
       });
 
-      const readingContext = currentReading 
-        ? `\n[वर्तमान लाइव मीटर स्थिति: सक्शन प्रेशर: ${currentReading.psi || 40} PSI, वोल्टेज: ${currentReading.voltage || 220}V, करंट: ${currentReading.amp || 3.8}A]`
-        : "";
+      const contextDetails = [
+        appliance ? `[उपकरण: ${appliance.brand || 'LG'} ${appliance.ton || '1.5 Ton'} ${appliance.type || 'Inverter'} AC, गैस: ${appliance.gas || 'R32'}]` : '',
+        currentReading ? `[मीटर रीडिंग: सक्शन ${currentReading.psi ?? 40} PSI, वोल्टेज ${currentReading.voltage ?? 220}V, करंट ${currentReading.amp ?? 3.8}A]` : ''
+      ].filter(Boolean).join(' ');
 
-      const response = await model.generateContent(message + readingContext);
-      const textResponse = response.response.text();
+      // Format previous history for Gemini multi-turn session
+      const formattedHistory = history.slice(-6).map(h => ({
+        role: h.role,
+        parts: [{ text: h.text }]
+      }));
 
-      return NextResponse.json({
-        source: "GEMINI_LIVE_API",
-        model: GEMINI_MODELS.text,
-        reply: textResponse,
-        confidence: 0.94
-      });
+      try {
+        const chat = model.startChat({
+          history: formattedHistory
+        });
+
+        const promptWithContext = contextDetails ? `${contextDetails}\n\nतकनीशियन/ग्राहक का प्रश्न: ${message}` : message;
+        const response = await chat.sendMessage(promptWithContext);
+        const textResponse = response.response.text();
+
+        return NextResponse.json({
+          source: "GEMINI_LIVE_API",
+          model: GEMINI_MODELS.text,
+          reply: textResponse,
+          confidence: 0.95
+        });
+      } catch (chatError) {
+        // Fallback to single turn generateContent if startChat has formatting edge case
+        const response = await model.generateContent(`${contextDetails}\n${message}`);
+        return NextResponse.json({
+          source: "GEMINI_LIVE_API",
+          model: GEMINI_MODELS.text,
+          reply: response.response.text(),
+          confidence: 0.92
+        });
+      }
     }
 
     // Graceful Intelligent Local Fallback (matches physics rules)
@@ -55,7 +84,7 @@ export async function POST(req: NextRequest) {
     const lower = message.toLowerCase();
 
     if (lower.includes("thanda") || lower.includes("cooling") || lower.includes("ठंडा")) {
-      fallbackReply = "AC ठंडा न करने के मुख्य कारण: 1. गैस का रिसाव (40 PSI), 2. इंडोर फिल्टर व ब्लोअर चोक, या 3. कम वोल्टेज (190V से कम)। कृपया नीले गेज मीटर का प्रेशर चेक करें।";
+      fallbackReply = "AC ठंडा न करने के मुख्य कारण: 1. गैस का रिसाव (सक्शन प्रेशर चेक करें), 2. इंडोर फिल्टर व ब्लोअर चोक, या 3. कम वोल्टेज (190V से कम)। कृपया नीले गेज मीटर का प्रेशर चेक करें।";
     } else if (lower.includes("blower") || lower.includes("fan") || lower.includes("ब्लोअर") || lower.includes("पंखा")) {
       fallbackReply = "फ़ैन ब्लोअर न चलने पर इंडोर PCB का 3.5µF कैपेसिटर चेक करें। रंगीन डायग्राम के अनुसार लाल तार पर 230V और नीले तार पर न्यूट्रल चेक करें।";
     } else if (lower.includes("kharcha") || lower.includes("paisa") || lower.includes("खर्चा") || lower.includes("रेट")) {
