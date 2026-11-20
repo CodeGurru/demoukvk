@@ -1,14 +1,13 @@
 @echo off
-title AI Supervisor - Bijli Wala Aya
+title AI Supervisor - Bijli Wala Aya (Next.js Production Server)
 echo ========================================================
-echo   AI Supervisor - Single-Page Voice & Camera UI
+echo   ⚡ Bijli Wala Aya AI Supervisor (Next.js 14 App Router)
 echo   Startup Buildathon India 2026 (Delhi)
-echo   Team: Bijli Wala Aya
+echo   Team: Bijli Wala Aya - UKVK Services Technologies
 echo ========================================================
 echo.
-echo Server starting at http://localhost:3000 ...
-echo Browser opening in 2 seconds...
-timeout /t 2 /nobreak >nul
+echo Starting Next.js Production Server on http://localhost:3000 ...
+echo Opening browser in 3 seconds...
 start http://localhost:3000
-python -m http.server 3000
+npm.cmd start
 pause
