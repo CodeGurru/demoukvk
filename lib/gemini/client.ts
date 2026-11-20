@@ -1,6 +1,6 @@
 /**
  * Google Gemini SDK Client Integration
- * Uses @google/generative-ai (with official fallbacks)
+ * Uses @google/generative-ai with active models
  */
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
@@ -14,10 +14,10 @@ export function getGeminiClient(): GoogleGenerativeAI | null {
 }
 
 export const GEMINI_MODELS = {
-  text: process.env.MODEL_TEXT || "gemini-1.5-flash",
-  vision: process.env.MODEL_VISION || "gemini-1.5-flash",
-  image: process.env.MODEL_IMAGE || "imagen-3.0-generate-002",
-  live: process.env.MODEL_LIVE || "gemini-2.0-flash-exp",
+  text: process.env.MODEL_TEXT || "gemini-2.5-flash",
+  vision: process.env.MODEL_VISION || "gemini-2.5-flash",
+  image: process.env.MODEL_IMAGE || "nano-banana-pro-preview",
+  live: process.env.MODEL_LIVE || "gemini-2.5-flash",
 };
 
 export function getGeminiModel(modelName: string = GEMINI_MODELS.text) {
